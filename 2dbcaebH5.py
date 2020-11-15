@@ -4,15 +4,18 @@ import xlrd
 import re
 import ctypes
 
+str1 = "0x18EAFF00";
+print(str(ctypes.c_uint32(eval(str1))))
+
 # 打开文件
-data = xlrd.open_workbook('8082DBC.xlsx')
+data = xlrd.open_workbook('aeb.xlsx')
 
 # 查看工作表
 data.sheet_names()
 print("sheets：" + str(data.sheet_names()))
 
 # 通过文件名获得工作表,获取工作表1
-table = data.sheet_by_name('Sheet1')
+table = data.sheet_by_name('H5_Matrix')
 # 获取行数和列数
 # 行数：table.nrows
 # 列数：table.ncols
@@ -27,10 +30,10 @@ print("总列数：" + str(table.ncols))
 #print("整行值：" + str(table.row_values(0)))
 #print("整列值：" + str(table.col_values(9)))
 
-rowvalue = table.row_values(0)
+rowvalue = table.row_values(1)
 print(rowvalue)
 
-fdbc = open("808A6.dbc","w+")
+fdbc = open("808AEBH5.dbc","w+")
 
 newContext="VERSION \"\"\n\n\nNS_ :\n\tNS_DESC_\n\
 	CM_\n\
@@ -66,28 +69,33 @@ print("print noRow "+str(table.nrows))
 noRow = 1
 spaStr = " "
 chID = ""
-intID = 0
+CintID = ""
+intID = ""
 while noRow < table.nrows:
-    print(str(noRow))
+    print("now row NO:"+str(noRow))
     noRowData = table.row_values(noRow)
-    print(noRowData)
-    print(noRowData[0])
-    print(chID)
+    print("now row data:"+str(noRowData))
+    print("rowdata[0]:"+noRowData[0])
 
-    if noRowData[0] != chID:
-        chID = noRowData[0]
+    if noRowData[0] != "":
+        chID = noRowData[2]
         print(chID)
-        intID = int(chID,16)
+        print(str(ctypes.c_uint32(eval(chID))))
+        CintID = str(ctypes.c_uint32(eval(chID)))
+        intID = re.sub("\D","",CintID)
+        print("intID:"+str(intID))
 
 
-        newContext = "BO_ " + str(noRowData[13])[0:-2] +spaStr + "_"+chID+":" +spaStr+str(int(noRowData[1]))+spaStr+"Vector__XXX\n"
-        print("newContext"+newContext)
-        fdbc.write(newContext)
-    newContext = spaStr+"SG_" + spaStr+str(noRowData[2])+spaStr+":"+spaStr+str(int(noRowData[3]))+"|"+\
-                 str(int(noRowData[4]))+"@"+str(int(noRowData[5]))+str(noRowData[6])+spaStr+"("+\
-                str(noRowData[7])[0:-2]+","+str(noRowData[8])[0:-2]+")"+spaStr+"["+str(noRowData[9])[0:-2]+"|"+str(noRowData[10])+"]"+ \
-                 spaStr+"\""+str(noRowData[11])+"\""+spaStr+"Vector__XXX\n"
-    print("newContext" + newContext)
+        newContext = "BO_ " + str(intID) +spaStr + str(noRowData[0])+":" +spaStr+str(int(noRowData[6]))+spaStr+"Vector__XXX\n"
+        #print("newContext:\n"+newContext)
+        #fdbc.write(newContext)
+    if noRowData[0] == "":
+        print("signal describe:\n"+str(re.sub("\W+","",noRowData[8])))
+        newContext = spaStr+"SG_" + spaStr+str(re.sub("\W+","",noRowData[7]))+spaStr+":"+spaStr+str(int(noRowData[10]))+"|"+\
+                 str(int(noRowData[13]))+"@1+"+spaStr+"("+\
+                str(int(noRowData[15]))+","+str(int(noRowData[16]))+")"+spaStr+"["+str(noRowData[17])[0:-2]+"|"+str(noRowData[18])[0:-2]+"]"+ \
+                 spaStr+"\""+str(re.sub("\W+","",noRowData[25]))+"\""+spaStr+"Vector__XXX\n"
+    print("total newContext:\n" + newContext)
     fdbc.write(newContext)
     noRow+=1
 
